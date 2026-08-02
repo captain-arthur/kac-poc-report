@@ -1,0 +1,8 @@
+kind: cluster_auth_preference
+version: v2
+metadata:
+  name: cluster-auth-preference
+spec:
+  type: local
+  second_factor: otp
+  disconnect_expired_cert: true

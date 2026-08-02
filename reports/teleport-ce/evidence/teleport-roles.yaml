@@ -1,0 +1,46 @@
+kind: role
+version: v8
+metadata:
+  name: kac-dev-viewer
+spec:
+  allow:
+    kubernetes_labels:
+      '*': '*'
+    kubernetes_groups: ["kac-view"]
+    kubernetes_resources:
+      - kind: "*"
+        api_group: "*"
+        namespace: "dev"
+        name: "*"
+        verbs: ["get", "list", "watch"]
+  options:
+    max_session_ttl: 8h
+---
+kind: role
+version: v8
+metadata:
+  name: kac-dev-admin
+spec:
+  allow:
+    kubernetes_labels:
+      '*': '*'
+    kubernetes_groups: ["kac-edit"]
+    kubernetes_resources:
+      - kind: "*"
+        api_group: "*"
+        namespace: "dev"
+        name: "*"
+        verbs: ["*"]
+  options:
+    max_session_ttl: 4h
+---
+kind: role
+version: v8
+metadata:
+  name: kac-requester
+spec:
+  allow:
+    request:
+      roles: ["kac-dev-admin"]
+  options:
+    max_session_ttl: 8h

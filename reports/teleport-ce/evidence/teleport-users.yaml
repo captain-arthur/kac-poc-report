@@ -1,0 +1,16 @@
+kind: user
+version: v2
+metadata:
+  name: viewer1
+spec:
+  roles:
+    - kac-dev-viewer
+    - kac-requester
+---
+kind: user
+version: v2
+metadata:
+  name: admin1
+spec:
+  roles:
+    - kac-dev-admin

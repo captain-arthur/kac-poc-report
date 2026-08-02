@@ -1,0 +1,16 @@
+kind: cluster_networking_config
+metadata:
+  labels:
+    teleport.dev/origin: dynamic
+  name: cluster-networking-config
+  revision: 1cff1a94-93f3-4e6b-9027-b9783a5b1b10
+spec:
+  client_idle_timeout: 5m0s
+  idle_timeout_message: ""
+  keep_alive_count_max: 3
+  keep_alive_interval: 1m0s
+  session_control_timeout: 0s
+  tunnel_strategy:
+    type: agent_mesh
+  web_idle_timeout: 0s
+version: v2

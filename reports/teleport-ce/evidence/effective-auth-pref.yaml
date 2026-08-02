@@ -1,0 +1,25 @@
+kind: cluster_auth_preference
+metadata:
+  labels:
+    teleport.dev/origin: config-file
+  name: cluster-auth-preference
+  revision: d26b393a-2cf4-4539-8d66-dd92a43ace85
+spec:
+  allow_headless: true
+  allow_local_auth: true
+  allow_passwordless: true
+  default_session_ttl: 12h0m0s
+  disconnect_expired_cert: false
+  idp:
+    saml:
+      enabled: true
+  locking_mode: best_effort
+  okta: {}
+  second_factors:
+  - otp
+  - webauthn
+  signature_algorithm_suite: balanced-v1
+  type: local
+  webauthn:
+    rp_id: teleport.local
+version: v2

@@ -1,0 +1,49 @@
+# KAC POC - Teleport CE RBAC 검증 transcript
+# 생성: Sun Aug  2 23:25:02 KST 2026
+
+## [viewer1 / kac-dev-viewer] get pods -n dev  => 기대: ALLOW
+NAME                         READY   STATUS    RESTARTS   AGE
+dev-nginx-65dd9b4f6b-gzzxf   1/1     Running   0          14m
+
+## [viewer1] get pods -n prod  => 기대: DENY (namespace 제한, Teleport RBAC)
+Error from server (Forbidden): pods is forbidden: User "viewer1" cannot list resource "pods" in API group "" in the namespace "prod"
+Ask your Teleport admin to ensure that your Teleport role includes access to the pods in "kubernetes_resources" field.
+Check by running: kubectl auth can-i list pods --namespace prod 
+
+## [viewer1] delete deploy dev-nginx -n dev  => 기대: DENY (read-only verbs)
+Error from server (Forbidden): deployments "dev-nginx" is forbidden: User "viewer1" cannot delete resource "deployments" in API group "apps" in the namespace "dev"
+Ask your Teleport admin to ensure that your Teleport role includes access to the deployments in "kubernetes_resources" field.
+Check by running: kubectl auth can-i delete deployments/dev-nginx --namespace dev 
+
+## [viewer1] auth can-i list pods -n dev
+yes
+## [viewer1] auth can-i delete pods -n dev
+no - access to pods dev/* denied by Teleport: please ensure that "kubernetes_resources" field in your Teleport role defines access to the desired resource.
+
+Valid example:
+kubernetes_resources:
+- kind: pods
+  name: '*'
+  namespace: dev
+  verbs: ['*']
+  api_group: '*'
+
+## [viewer1] auth can-i list pods -n prod
+no - access to pods prod/* denied by Teleport: please ensure that "kubernetes_resources" field in your Teleport role defines access to the desired resource.
+
+Valid example:
+kubernetes_resources:
+- kind: pods
+  name: '*'
+  namespace: prod
+  verbs: ['*']
+  api_group: '*'
+
+
+## [viewer1] get ns  => 기대: 접근 가능한 dev만 노출(리소스 필터링)
+NAME   STATUS   AGE
+dev    Active   14m
+
+## [admin1 / kac-dev-admin] exec into dev-nginx => 기대: ALLOW + 세션 기록
+HELLO_FROM_KAC_POC
+uid=0(root) gid=0(root) groups=0(root),1(bin),2(daemon),3(sys),4(adm),6(disk),10(wheel),11(floppy),20(dialout),26(tape),27(video)

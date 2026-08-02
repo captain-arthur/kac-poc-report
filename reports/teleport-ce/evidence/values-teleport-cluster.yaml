@@ -1,0 +1,22 @@
+clusterName: teleport.local
+chartMode: standalone
+proxyListenerMode: multiplex
+
+service:
+  type: ClusterIP
+
+# self-signed TLS (ACME off). tsh connects with --insecure for local POC.
+acme: false
+
+# single replica for local POC
+highAvailability:
+  replicaCount: 1
+
+persistence:
+  enabled: true
+  size: 2Gi
+
+log:
+  level: INFO
+  output: stdout
+  format: json
