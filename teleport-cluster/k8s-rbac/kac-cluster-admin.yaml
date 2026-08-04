@@ -1,0 +1,31 @@
+# Teleport kubernetes_groups: ["kac-cluster-admin"] 와 매핑할 K8s RBAC
+# delete / deletecollection 제외한 광역 관리 권한 (POC용 제한 어드민)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kac-cluster-admin
+  labels:
+    app.kubernetes.io/part-of: kac
+rules:
+  # 모든 API 리소스: 조회·생성·수정만 (삭제 제외)
+  - apiGroups: ["*"]
+    resources: ["*"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+  # non-resource URL (예: /healthz, /apis) — 삭제 개념 없음
+  - nonResourceURLs: ["*"]
+    verbs: ["get", "post"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kac-cluster-admin
+  labels:
+    app.kubernetes.io/part-of: kac
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kac-cluster-admin
+subjects:
+  - kind: Group
+    name: kac-cluster-admin
+    apiGroup: rbac.authorization.k8s.io

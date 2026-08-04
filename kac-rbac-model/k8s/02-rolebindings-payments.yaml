@@ -1,0 +1,47 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: kac-ns-viewer
+  namespace: payments
+  labels:
+    app.kubernetes.io/part-of: kac
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kac-ns-viewer
+subjects:
+  - kind: Group
+    name: team-payments-viewer
+    apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: kac-ns-troubleshooter
+  namespace: payments
+  labels:
+    app.kubernetes.io/part-of: kac
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kac-ns-troubleshooter
+subjects:
+  - kind: Group
+    name: team-payments-troubleshooter
+    apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: kac-ns-admin
+  namespace: payments
+  labels:
+    app.kubernetes.io/part-of: kac
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kac-ns-admin
+subjects:
+  - kind: Group
+    name: team-payments-admin
+    apiGroup: rbac.authorization.k8s.io

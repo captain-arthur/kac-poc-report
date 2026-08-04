@@ -1,0 +1,18 @@
+kind: role
+version: v7
+metadata:
+  name: payments-ns-admin
+  description: "payments ns admin (group team-payments-admin)"
+spec:
+  allow:
+    kubernetes_labels:
+      "*": "*"
+    kubernetes_groups:
+      - team-payments-admin
+    kubernetes_resources:
+      - kind: "*"
+        namespace: payments
+        name: "*"
+        verbs: ["get", "list", "watch", "create", "update", "patch"]
+  options:
+    max_session_ttl: 8h

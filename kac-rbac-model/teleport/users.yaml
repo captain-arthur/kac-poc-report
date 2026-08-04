@@ -1,0 +1,40 @@
+kind: user
+version: v2
+metadata:
+  name: alice-payments-viewer
+spec:
+  roles:
+    - payments-ns-viewer
+---
+kind: user
+version: v2
+metadata:
+  name: bob-payments-troubleshooter
+spec:
+  roles:
+    - payments-ns-troubleshooter
+---
+kind: user
+version: v2
+metadata:
+  name: carol-payments-admin
+spec:
+  roles:
+    - payments-ns-admin
+---
+kind: user
+version: v2
+metadata:
+  name: dave-pe-admin
+spec:
+  roles:
+    - pe-ns-admin
+---
+kind: user
+version: v2
+metadata:
+  name: eve-both-viewer
+spec:
+  roles:
+    - payments-ns-viewer
+    - pe-ns-viewer

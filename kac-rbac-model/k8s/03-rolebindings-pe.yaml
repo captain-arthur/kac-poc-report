@@ -1,0 +1,47 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: kac-ns-viewer
+  namespace: pe
+  labels:
+    app.kubernetes.io/part-of: kac
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kac-ns-viewer
+subjects:
+  - kind: Group
+    name: team-pe-viewer
+    apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: kac-ns-troubleshooter
+  namespace: pe
+  labels:
+    app.kubernetes.io/part-of: kac
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kac-ns-troubleshooter
+subjects:
+  - kind: Group
+    name: team-pe-troubleshooter
+    apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: kac-ns-admin
+  namespace: pe
+  labels:
+    app.kubernetes.io/part-of: kac
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kac-ns-admin
+subjects:
+  - kind: Group
+    name: team-pe-admin
+    apiGroup: rbac.authorization.k8s.io

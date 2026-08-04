@@ -1,0 +1,25 @@
+kind: role
+version: v7
+metadata:
+  name: payments-ns-troubleshooter
+  description: "payments ns troubleshooter (group team-payments-troubleshooter)"
+spec:
+  allow:
+    kubernetes_labels:
+      "*": "*"
+    kubernetes_groups:
+      - team-payments-troubleshooter
+    kubernetes_resources:
+      - kind: "*"
+        namespace: payments
+        name: "*"
+        verbs: ["get", "list", "watch"]
+      # Teleport 전용 verb — K8s의 pods/exec·pods/portforward create 와 대응
+      - kind: pod
+        namespace: payments
+        name: "*"
+        verbs: ["exec", "portforward"]
+
+
+  options:
+    max_session_ttl: 8h

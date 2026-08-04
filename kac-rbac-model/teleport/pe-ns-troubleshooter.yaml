@@ -1,0 +1,24 @@
+kind: role
+version: v7
+metadata:
+  name: pe-ns-troubleshooter
+  description: "pe ns troubleshooter (group team-pe-troubleshooter)"
+spec:
+  allow:
+    kubernetes_labels:
+      "*": "*"
+    kubernetes_groups:
+      - team-pe-troubleshooter
+    kubernetes_resources:
+      - kind: "*"
+        namespace: pe
+        name: "*"
+        verbs: ["get", "list", "watch"]
+      - kind: pod
+        namespace: pe
+        name: "*"
+        verbs: ["exec", "portforward"]
+
+
+  options:
+    max_session_ttl: 8h

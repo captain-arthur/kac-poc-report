@@ -1,0 +1,19 @@
+kind: role
+version: v7
+metadata:
+  name: kac-cluster-admin
+  description: "K8s limited admin (no delete) via group kac-cluster-admin"
+spec:
+  allow:
+    kubernetes_labels:
+      "*": "*"
+    kubernetes_groups:
+      - kac-cluster-admin
+    # Teleport 층: create/delete 제외 (K8s RBAC에는 create가 남아 있어도 Teleport에서 차단되는지 검증용)
+    kubernetes_resources:
+      - kind: "*"
+        namespace: "*"
+        name: "*"
+        verbs: ["get", "list", "watch", "update", "patch"]
+  options:
+    max_session_ttl: 8h

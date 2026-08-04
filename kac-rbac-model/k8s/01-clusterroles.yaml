@@ -1,0 +1,73 @@
+# 권한 등급 템플릿 (ClusterRole) — ns RoleBinding에서 재사용
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kac-ns-viewer
+  labels:
+    app.kubernetes.io/part-of: kac
+rules:
+  - apiGroups: ["", "apps"]
+    resources: ["pods", "services", "deployments", "replicasets", "configmaps"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kac-ns-troubleshooter
+  labels:
+    app.kubernetes.io/part-of: kac
+rules:
+  - apiGroups: ["", "apps"]
+    resources: ["pods", "services", "deployments", "replicasets", "configmaps"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["pods/log"]
+    verbs: ["get", "list"]
+  # K8s 1.30+ websocket exec는 pods/exec 에 get+create 필요
+  - apiGroups: [""]
+    resources: ["pods/exec", "pods/portforward"]
+    verbs: ["get", "create"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kac-ns-admin
+  labels:
+    app.kubernetes.io/part-of: kac
+rules:
+  - apiGroups: ["", "apps"]
+    resources: ["*"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+  - apiGroups: ["batch"]
+    resources: ["jobs", "cronjobs"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+---
+# 클러스터 범위 제한 어드민 (delete 제외) — ClusterRoleBinding 사용
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kac-cluster-admin
+  labels:
+    app.kubernetes.io/part-of: kac
+rules:
+  - apiGroups: ["*"]
+    resources: ["*"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+  - nonResourceURLs: ["*"]
+    verbs: ["get", "post"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kac-cluster-admin
+  labels:
+    app.kubernetes.io/part-of: kac
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kac-cluster-admin
+subjects:
+  - kind: Group
+    name: kac-cluster-admin
+    apiGroup: rbac.authorization.k8s.io
