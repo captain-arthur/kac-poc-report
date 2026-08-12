@@ -1,12 +1,4 @@
-# Generated / bulky / secret material — do not commit
-certs/
-!certs/.gitkeep
-artifacts/
-*.tar
+.DS_Store
 *.pem
 *.key
 *.crt
-!manifests/
-host-ca.pem
-tag-values.generated.yaml
-.DS_Store

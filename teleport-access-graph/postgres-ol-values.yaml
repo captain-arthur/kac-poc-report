@@ -1,0 +1,15 @@
+# helm install tag-postgres ./charts/tag-postgres-0.1.0.tgz \
+#   -n teleport-access-graph --create-namespace -f postgres-ol-values.yaml
+
+image:
+  repository: qlqjs90/postgres
+  tag: "16-alpine"
+  pullPolicy: IfNotPresent
+
+auth:
+  username: access_graph
+  password: access_graph
+  database: access_graph
+
+service:
+  port: 5432

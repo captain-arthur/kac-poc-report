@@ -1,0 +1,40 @@
+# helm install teleport-access-graph ./charts/teleport-access-graph-1.30.2.tgz \
+#   -n teleport-access-graph -f ol-values.yaml
+#
+# Before install:
+#   1) tag-postgres already running (see postgres-ol-values.yaml)
+#   2) TLS secret: kubectl -n teleport-access-graph create secret tls teleport-access-graph-tls \
+#        --cert=cert.crt --key=cert.key
+#      (SAN must include: teleport-access-graph.teleport-access-graph.svc.cluster.local)
+#   3) Replace clusterHostCAs below with Teleport Host CA PEM:
+#        kubectl -n <teleport-ns> exec deploy/teleport-auth -- tctl auth export --type=tls-host
+
+replicaCount: 1
+
+postgres:
+  # release name `tag-postgres` → Service `tag-postgres`
+  connectionString: "postgres://access_graph:access_graph@tag-postgres:5432/access_graph?sslmode=disable"
+
+tls:
+  existingSecretName: "teleport-access-graph-tls"
+
+clusterHostCAs:
+  - |
+    -----BEGIN CERTIFICATE-----
+    REPLACE_WITH_TELEPORT_HOST_CA
+    -----END CERTIFICATE-----
+
+image:
+  repository: qlqjs90/access-graph
+  tag: "1.30.2"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  grpcPort: 443
+
+log:
+  level: INFO
+
+identityActivityCenter:
+  enabled: false

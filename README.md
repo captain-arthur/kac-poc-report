@@ -1,7 +1,7 @@
 관련 디렉터리:
 
 - [`kac-rbac-model/`](./kac-rbac-model/) — Teleport Role ↔ K8s Group RBAC 예시
-- [`teleport-access-graph/`](./teleport-access-graph/) — Identity Security(Access Graph) **오프라인** 설치 패키지 (Helm chart + scripts)
+- [`teleport-access-graph/`](./teleport-access-graph/) — Access Graph용 Helm 차트 2개 + ol-values (Postgres + TAG)
 - [`reports/`](./reports/) — POC 보고서·evidence
 
 ---
