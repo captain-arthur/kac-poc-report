@@ -1,0 +1,33 @@
+# teleport-access-graph Helm values (offline POC)
+# clusterHostCAs is filled by scripts/install-offline.sh from the live Teleport Host CA.
+# For manual install, replace the placeholder under clusterHostCAs.
+
+replicaCount: 1
+
+postgres:
+  secretName: "teleport-access-graph-postgres"
+  secretKey: "uri"
+
+tls:
+  existingSecretName: "teleport-access-graph-tls"
+
+clusterHostCAs:
+  - |
+    -----BEGIN CERTIFICATE-----
+    REPLACE_WITH_TELEPORT_HOST_CA
+    -----END CERTIFICATE-----
+
+image:
+  repository: qlqjs90/access-graph
+  tag: "1.30.2"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  grpcPort: 443
+
+log:
+  level: INFO
+
+identityActivityCenter:
+  enabled: false

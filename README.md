@@ -1,3 +1,11 @@
+관련 디렉터리:
+
+- [`kac-rbac-model/`](./kac-rbac-model/) — Teleport Role ↔ K8s Group RBAC 예시
+- [`teleport-access-graph/`](./teleport-access-graph/) — Identity Security(Access Graph) **오프라인** 설치 패키지 (Helm chart + scripts)
+- [`reports/`](./reports/) — POC 보고서·evidence
+
+---
+
 `payments` / `pe` 두 네임스페이스만 있다고 가정한 **전체 예시**입니다.
 
 ---

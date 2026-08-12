@@ -1,0 +1,23 @@
+# Merge/use with existing teleport-cluster values to enable Access Graph.
+# Assumes Access Graph is installed in ns teleport-access-graph with default service name.
+#
+# Usage (offline, chart already in ../charts):
+#   helm upgrade teleport ./charts/teleport-cluster-18.10.3.tgz \
+#     -n teleport -f values/teleport-cluster-base.yaml \
+#     -f values/teleport-cluster-with-access-graph.yaml
+
+auth:
+  teleportConfig:
+    access_graph:
+      enabled: true
+      endpoint: teleport-access-graph.teleport-access-graph.svc.cluster.local:443
+      ca: /var/run/access-graph/ca.pem
+
+extraVolumes:
+  - name: tag-ca
+    configMap:
+      name: teleport-access-graph-ca
+
+extraVolumeMounts:
+  - name: tag-ca
+    mountPath: /var/run/access-graph
