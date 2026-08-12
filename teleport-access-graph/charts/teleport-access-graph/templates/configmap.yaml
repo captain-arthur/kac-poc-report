@@ -1,0 +1,58 @@
+---
+{{- $postgresConnParams := include "teleport-access-graph.mergePostgresParams" (dict "connection_parameters" .Values.postgres.connection_parameters "aws" .Values.postgres.aws "azure" .Values.postgres.azure ) | fromYaml}}
+{{- $replicaConnParams := include "teleport-access-graph.mergePostgresParams" (dict "connection_parameters" .Values.postgres.replica.connection_parameters "aws" .Values.postgres.aws "azure" .Values.postgres.azure) | fromYaml}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "teleport-access-graph.fullname" . }}-config
+data:
+  config.yaml: |2
+    address: ":9090"
+    {{- if or $postgresConnParams $replicaConnParams }}
+    backend:
+    {{- end }}
+    {{- with $postgresConnParams }}
+      postgres:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- if and $replicaConnParams .Values.postgres.replica.secretName }}
+    {{- with $replicaConnParams }}
+      postgres_read_replica:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- end }}
+    metrics:
+      enabled: {{ .Values.metrics.enabled }}
+      pprof: {{ .Values.metrics.pprof }}
+    tls:
+      cert: /var/run/tls/tls.crt
+      key: /var/run/tls/tls.key
+    log:
+      level: {{ .Values.log.level }}
+    registration_cas:
+      - /var/run/config/registration_cas.pem
+
+{{- $iac := coalesce .Values.identityActivityCenter .Values.identity_activity_center }}
+{{- with $iac }}
+  {{- if .enabled }}
+    identity_activity_center:
+      region: {{ required "identityActivityCenter.region is required" .region | quote }}
+      database: {{ required "identityActivityCenter.database is required" .database | quote }}
+      table: {{ required "identityActivityCenter.table is required" .table | quote }}
+      workgroup: {{ required "identityActivityCenter.workgroup is required" .workgroup | quote }}
+      s3: {{ required "identityActivityCenter.s3 is required" .s3 | quote }}
+      s3_results: {{ required "identityActivityCenter.s3Results is required" (coalesce .s3Results .s3_results) | quote }}
+      s3_large_files: {{ required "identityActivityCenter.s3LargeFiles is required" (coalesce .s3LargeFiles .s3_large_files) | quote }}
+      sqs_queue_url: {{ required "identityActivityCenter.sqsQueueUrl is required" (coalesce .sqsQueueUrl .sqs_queue_url) | quote }}
+    {{- $geoipPath := coalesce .maxmindGeoipCityDbPath .maxmind_geoip_city_db_path }}
+    {{- if $geoipPath }}
+      maxmind_geoip_city_db_path: {{ $geoipPath | quote }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+
+
+  registration_cas.pem: |2
+    {{ range $ca := (required ".Values.clusterHostCAs is required" .Values.clusterHostCAs ) -}}
+    {{- $ca | nindent 4 }}
+    {{ end -}}

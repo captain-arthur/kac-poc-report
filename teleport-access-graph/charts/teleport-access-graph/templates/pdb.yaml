@@ -1,0 +1,21 @@
+{{- if .Values.podDisruptionBudget.enabled }}
+{{- if .Capabilities.APIVersions.Has "policy/v1" }}
+apiVersion: policy/v1
+{{- else }}
+apiVersion: policy/v1beta1
+{{- end }}
+kind: PodDisruptionBudget
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "teleport-access-graph.labels" . | nindent 4 }}
+{{- if .Values.podDisruptionBudget.labels }}
+  {{- toYaml .Values.podDisruptionBudget.labels | nindent 4 }}
+{{- end }}
+spec:
+  minAvailable: {{ .Values.podDisruptionBudget.minAvailable }}
+  selector:
+    matchLabels:
+    {{- include "teleport-access-graph.selectorLabels" . | nindent 6 }}
+{{- end }}

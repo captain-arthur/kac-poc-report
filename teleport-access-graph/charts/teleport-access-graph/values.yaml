@@ -1,0 +1,296 @@
+##################################################
+# Values that must always be provided by the user.
+##################################################
+# postgres -- Database connection settings
+postgres:
+  # postgres.connectionString(string) -- is the connection string to the PostgreSQL database.
+  # Use this only when not using a Kubernetes secret and not using AWS or Azure IAM authentication.
+  connectionString: ""
+
+  # postgres.secretName(string) -- is the name of an existing Kubernetes secret
+  # containing the connection string to the PostgreSQL database.
+  secretName: ""
+  # postgres.secretKey(string) -- is the name of the secret key for the provided Kubernetes secret
+  # containing the connection string to the PostgreSQL database.
+  secretKey: "uri"
+
+  # postgres.aws -- contains optional AWS connection settings for using AWS IAM authentication.
+  # This is only required if you are using an AWS RDS or Aurora PostgreSQL database with IAM authentication.
+  aws:
+    # postgres.aws.enabled(bool) -- enables IAM authentication for the PostgreSQL database.
+    enabled: false
+    # postgres.aws.region(string) -- is the optional AWS region where the PostgreSQL database is located.
+    # If not set, the region will be inferred from the `AWS_REGION` environment variable.
+    # @default -- ""
+
+  # postgres.azure(object) -- contains optional settings for using Microsoft Entra ID authentication with Azure Database for PostgreSQL.
+  # This is only required if you are using an Azure Database for PostgreSQL.
+  azure:
+    # postgres.azure.enabled(bool) -- enables Microsoft Entra ID authentication for the PostgreSQL database.
+    enabled: false
+    # postgres.azure.tenantId(string) -- is the Microsoft Entra ID tenant ID to use for authentication.
+    # If not set, the default tenant ID will be used.
+    # @default -- ""
+
+  # postgres.connection_parameters(object) -- contains optional connection parameters configuration values
+  # for connecting to the database.
+  connection_parameters:
+  #   max_conns: 4
+  #   min_conns: 0
+  #   max_conn_lifetime: 1h
+  #   max_conn_idle_time: 30m
+  #   health_check_period: 1m
+  #   max_conn_lifetime_jitter: 0s
+
+  # postgres.replica -- contains the database replica connection settings.
+  replica:
+    # postgres.replica.connectionString(string) -- is the connection string to the PostgreSQL database.
+    # Use this only when not using a Kubernetes secret and not using AWS or Azure IAM authentication.
+    connectionString: ""
+
+    # postgres.replica.secretName(string) -- is the name of an existing Kubernetes secret
+    # containing the connection string to the replica PostgreSQL database.
+    secretName: ""
+    # postgres.replica.secretKey(string) -- is the name of the secret key for the provided Kubernetes secret
+    # containing the connection string to the replica PostgreSQL database.
+    secretKey: "uri"
+
+    # postgres.replica.connection_parameters(object) -- contains optional connection parameters configuration values
+    # for connecting to the replica database.
+    # @default -- null
+
+
+# tls -- TLS settings for the main gRPC listener.
+tls:
+  # tls.existingSecretName(string) -- is the name of an existing Kubernetes secret
+  # containing the certificate and its private key to use for the gRPC listener.
+  # The secret must be of type `kubernetes.io/tls`, see
+  # [the Kubernetes documentation](https://kubernetes.io/docs/concepts/configuration/secret/#tls-secrets) for more details.
+  #
+  # Setting this is required, as Teleport Access Graph always operates via TLS-protected connections.
+  existingSecretName: ""
+
+# clusterHostCAs(array) -- is a list of strings containing PEM-encoded Host CA certificates of Teleport clusters that are allowed to use this instance of TAG.
+# Setting this to a non-empty array is required.
+clusterHostCAs: []
+
+# identityActivityCenter(object) -- contains options for the Identity Activity Center feature.
+# This feature allows Access Graph to store security events in a central location
+# and to query them using Athena, providing a way to analyze and correlate security events across
+# multiple Teleport clusters.
+identityActivityCenter:
+  # identityActivityCenter.enabled(bool) -- enables the Identity Activity Center feature.
+  enabled: false
+
+  # identityActivityCenter.region(string) -- the AWS region where the SQS queue, Athena database and S3 bucket are located.
+  region: ""
+  # identityActivityCenter.database(string) -- the name of the Athena database to use for storing security events.
+  database: ""
+  # identityActivityCenter.table(string) -- the name of the Athena table to use for storing security events.
+  table: ""
+  # identityActivityCenter.workgroup(string) -- the name of the Athena workgroup to use for executing queries.
+  workgroup: ""
+  # identityActivityCenter.s3(string) -- the S3 bucket to use for storing security events.
+  # Example: s3://bucket-events/data/
+  s3: ""
+  # identityActivityCenter.s3Results(string) -- the S3 bucket to use for storing results of Athena queries.
+  # Example: s3://bucket-events/results/
+  s3Results: ""
+  # identityActivityCenter.s3LargeFiles(string) -- the S3 bucket to use for storing large files that cannot be stored in the Athena database.
+  # This is used to store large files that cannot be shared via SQS, such as large JSON files.
+  # Example: s3://bucket-events/s3_large_files
+  s3LargeFiles: ""
+  # identityActivityCenter.sqsQueueUrl(string) -- the URL of the SQS queue to use for processing security events.
+  sqsQueueUrl: ""
+  # identityActivityCenter.maxmindGeoipCityDbPath(string) -- the path to the MaxMind GeoIP City database file.
+  # This is used to enrich security events with geolocation information.
+  # Use this together with the volumeMounts and volumes options to mount the database file into the TAG pod.
+  #
+  # Example:
+  #
+  # ```bash
+  # kubectl create secret generic maxmind-geoip-city-db --from-file=GeoLite2-City.mmdb
+  # ```
+  #
+  # Then, add the following to your TAG deployment:
+  #
+  # ```yaml
+  # volumes:
+  # - name: maxmind-geoip-city-db
+  #   secret:
+  #     secretName: maxmind-geoip-city-db
+  #     optional: false
+  # volumeMounts:
+  # - name: maxmind-geoip-city-db
+  #   mountPath: "/etc/maxmindGeoIP/"
+  #   readOnly: true
+  #
+  # identityActivityCenter:
+  #   ... # other options
+  #   maxmindGeoipCityDbPath: "/etc/maxmindGeoIP/GeoLite2-City.mmdb"
+  # ```
+  #
+  # If you do not want to use the MaxMind GeoIP City database, set this to an empty string.
+  maxmindGeoipCityDbPath: ""
+
+# Deprecated: use identityActivityCenter instead. Supported for backwards compatibility with existing deployments.
+# identity_activity_center: {}
+
+
+##################################################
+# Values that you may need to change.
+##################################################
+
+# service(object) -- contains options for the TAG Kubernetes service that the Chart exposes.
+service:
+  # service.type(string) -- the type of Kubernetes service to create.
+  # The `LoadBalancer` type is only supported when using a Layer 4 (TCP) or lower load balancer.
+  # TAG expects to terminate its own TLS, as it uses mTLS to authenticate its clients.
+  type: ClusterIP
+  # service.grpcPort(int) -- the port that the gRPC service is exposed on.
+  # This is the port that Teleport Auth Service and Proxy Service will need to connect to TAG on.
+  grpcPort: 443
+  # service.metricsPort(int) -- the port that the metrics service is exposed on.
+  # Requires `metrics.enabled` to be `true`.
+  metricsPort: 3000
+
+##################################################
+# Other options
+##################################################
+
+# replicaCount(int) -- the number of TAG pods that should be deployed.
+replicaCount: 2
+
+# metrics(object) -- contains options for the TAG metrics service.
+metrics:
+  # metrics.enabled(bool) -- enables the metrics service.
+  enabled: false
+
+  # metrics.pprof(bool) -- Enables pprof metrics endpoints
+  pprof: false
+
+# log -- contains logging settings for TAG.
+log:
+  # log.level(string) -- the minimum severity of log messages to output. Supported values are `DEBUG`, `INFO`, `WARN` and `ERROR`.
+  level: INFO
+
+# image(object) --
+image:
+  repository: public.ecr.aws/gravitational/access-graph
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  # image.tag(string) -- sets the version of the Teleport Access Graph image used.
+  # By default, this is the same as the Helm Chart version, i.e. TAG will be upgraded when you upgrade the Helm chart.
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Automatically mount a ServiceAccount's API credentials?
+  automount: false
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+
+# podAnnotations(object) -- contains the Kubernetes annotations put on the `Pod` resources created by the chart.
+podAnnotations: {}
+
+# podLabels(object) -- contains the Kubernetes labels put on the `Pod` resources created by the chart.
+podLabels: {}
+
+# podSecurityContext(object) -- sets the pod security context for any pods created by the chart.
+# See [the Kubernetes documentation](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod)
+# for more details.
+#
+# The default value supports running under the `restricted`
+# [Pod Security Standard](https://kubernetes.io/docs/concepts/security/pod-security-standards/).
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532 # 'nonroot'
+  runAsGroup: 65532 # 'nonroot'
+
+# securityContext(object) -- sets the container security context for any pods created by the chart.
+# See [the Kubernetes documentation](https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container)
+# for more details.
+#
+# The default value supports running under the `restricted`
+# [Pod Security Standard](https://kubernetes.io/docs/concepts/security/pod-security-standards/).
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  seccompProfile:
+    type: RuntimeDefault
+
+# extraEnv(list) -- allows specifying additional environment variables.
+extraEnv: []
+
+# extraEnvFrom(list) -- allows bulk-loading environment variables from Kubernetes Secrets or ConfigMaps
+# using the `envFrom` field. Each entry is passed through as-is, so `secretRef`, `configMapRef`,
+# and optional `prefix` fields are all supported.
+#
+# Example:
+#   extraEnvFrom:
+#     - secretRef:
+#         name: my-app-secrets
+#     - configMapRef:
+#         name: my-app-config
+#         optional: true
+extraEnvFrom: []
+
+# We usually recommend not to specify default resources and to leave this as a conscious
+# choice for the user. This also increases chances charts run on environments with little
+# resources, such as Minikube. If you do want to specify resources, uncomment the following
+# lines and adjust them as necessary.
+# resources:
+#   limits:
+#     cpu: 100m
+#     memory: 128Mi
+#   requests:
+#     cpu: 100m
+#     memory: 128Mi
+
+# volumes(array) -- allows you to define additional volumes on the output Deployment definition.
+volumes: []
+# - name: foo
+#   secret:
+#     secretName: mysecret
+#     optional: false
+
+# volumeMounts(array) -- allows you to define additional volumeMounts on the output Deployment definition.
+volumeMounts: []
+# - name: foo
+#   mountPath: "/etc/foo"
+#   readOnly: true
+
+# nodeSelector(object) -- sets the node selector for any pods created by the chart.
+# See [the Kubernetes documentation](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector)
+# for more details.
+nodeSelector: {}
+
+# tolerations(list) -- sets the tolerations for any pods created by the chart.
+# See [the Kubernetes documentation](https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/)
+# for more details.
+tolerations: []
+
+# affinity(object) -- sets the affinities for any pods created by the chart.
+# See [the Kubernetes documentation](https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity)
+# for more details.
+affinity: {}
+
+# If enabled will create a Pod Disruption Budget
+# https://kubernetes.io/docs/concepts/workloads/pods/disruptions/
+podDisruptionBudget:
+  enabled: false
+  minAvailable: 1
+  # labels(object) -- contains additional labels to add to the Pod Disruption Budget.
+  # @default -- {}
+  labels: {}

@@ -1,0 +1,6 @@
+apiVersion: v2
+appVersion: 16-alpine
+description: Minimal PostgreSQL for Teleport Access Graph POC
+name: tag-postgres
+type: application
+version: 0.1.0

@@ -1,0 +1,127 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "teleport-access-graph.fullname" . }}
+  labels:
+    {{- include "teleport-access-graph.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "teleport-access-graph.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "teleport-access-graph.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "teleport-access-graph.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - --config
+            - /var/run/config/config.yaml
+          {{- with .Values.extraEnvFrom }}
+          envFrom:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          env:
+          {{- with .Values.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+            # If postgres.connectionString is set, use it directly.
+            {{- if .Values.postgres.connectionString }}
+            {{- if not (empty .Values.postgres.secretName) }}
+              {{- fail "Please provide either postgres.connectionString or postgres.secretName" }}
+            {{- end }}
+            - name: TAG_POSTGRES_CONNECTION
+              value: {{ .Values.postgres.connectionString | quote }}
+            {{- else }}
+            - name: TAG_POSTGRES_CONNECTION
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.postgres.secretName | required ".Values.postgres.secretName is required" }}
+                  key: {{ .Values.postgres.secretKey }}
+            {{- end }}
+            {{- if .Values.postgres.replica.connectionString }}
+            {{- if not (empty .Values.postgres.replica.secretName) }}
+              {{- fail "Please provide either postgres.replica.connectionString or postgres.replica.secretName" }}
+            {{- end }}
+            - name: TAG_POSTGRES_REPLICA_CONNECTION
+              value: {{ .Values.postgres.replica.connectionString | quote }}
+            {{- else if .Values.postgres.replica.secretName }}
+            - name: TAG_POSTGRES_REPLICA_CONNECTION
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.postgres.replica.secretName }}
+                  key: {{ .Values.postgres.replica.secretKey }}
+            {{- end }}
+          ports:
+            - name: grpc
+              containerPort: 9090
+              protocol: TCP
+            {{- if .Values.metrics.enabled }}
+            - name: metrics
+              containerPort: 3000
+              protocol: TCP
+            {{- end }}
+          # TODO(justinas): reintroduce liveness probe after https://github.com/gravitational/access-graph/issues/478
+          #livenessProbe:
+          #  tcpSocket:
+          #    port: grpc
+          readinessProbe:
+            tcpSocket:
+              port: grpc
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: config
+              mountPath: /var/run/config
+              readOnly: true
+            - name: tls
+              mountPath: /var/run/tls
+              readOnly: true
+            {{- with .Values.volumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "teleport-access-graph.fullname" . }}-config
+        - name: tls
+          secret:
+            secretName: {{ .Values.tls.existingSecretName | required "tls.existingSecretName is required" }}
+        {{- with .Values.volumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

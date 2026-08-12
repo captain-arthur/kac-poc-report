@@ -1,0 +1,18 @@
+# 기존 teleport-cluster release 에 추가해서 helm upgrade
+# endpoint / SAN 은 ns=teleport, release=teleport-access-graph 기준
+
+auth:
+  teleportConfig:
+    access_graph:
+      enabled: true
+      endpoint: teleport-access-graph.teleport.svc.cluster.local:443
+      ca: /var/run/access-graph/ca.pem
+
+extraVolumes:
+  - name: tag-ca
+    configMap:
+      name: teleport-access-graph-ca
+
+extraVolumeMounts:
+  - name: tag-ca
+    mountPath: /var/run/access-graph

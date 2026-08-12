@@ -1,17 +1,13 @@
-# 같은 ns `teleport` 에 설치 (teleport-cluster 와 같이 씀)
-#
-# helm install tag-postgres ./charts/tag-postgres \
-#   -n teleport -f postgres-ol-values.yaml
-
 image:
   repository: qlqjs90/postgres
   tag: "16-alpine"
   pullPolicy: IfNotPresent
-
 auth:
   username: access_graph
   password: access_graph
   database: access_graph
-
 service:
   port: 5432
+resources: {}
+persistence:
+  enabled: false
