@@ -6,7 +6,8 @@ import yaml from 'https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.mjs';
 chai.config.aggregateChecks = false;
 
 const USER = 'kac-can-i';
-const GROUP = 't-rbac-kac-cluster-admin';
+const CLUSTER_ADMIN = 't-rbac-kac-cluster-admin';
+const NS_VIEWER = 't-rbac-kac-ns-viewer';
 const NAMESPACE = 'rbac-test';
 
 const kubeconfig = yaml.load(open(__ENV.KUBECONFIG || `${__ENV.HOME}/.kube/config`));
@@ -30,16 +31,30 @@ export const options = {
 };
 
 export default function () {
-  describe(`as group ${GROUP} in namespace ${NAMESPACE}`, () => {
-    const catalog = discover();
-    const actual = canI(catalog, GROUP, NAMESPACE);
+  const catalog = discover();
+
+  describe(`as group ${CLUSTER_ADMIN} in namespace ${NAMESPACE}`, () => {
+    const actual = canI(catalog, CLUSTER_ADMIN, NAMESPACE);
 
     describe('Then', () => {
-      expect(actual['can-i get pods']).to.equal('can-i get pods = yes');
-      expect(actual['can-i create pods']).to.equal('can-i create pods = yes');
-      expect(actual['can-i delete pods']).to.equal('can-i delete pods = no');
-      expect(actual['can-i create pods/exec']).to.equal('can-i create pods/exec = yes');
-      expect(actual['can-i get prioritylevelconfigurations.flowcontrol.apiserver.k8s.io']).to.equal('can-i get prioritylevelconfigurations.flowcontrol.apiserver.k8s.io = yes');
+      expect(actual[`can-i get pods -n ${NAMESPACE}`]).to.equal(`can-i get pods -n ${NAMESPACE} = yes`);
+      expect(actual[`can-i create pods -n ${NAMESPACE}`]).to.equal(`can-i create pods -n ${NAMESPACE} = yes`);
+      expect(actual[`can-i delete pods -n ${NAMESPACE}`]).to.equal(`can-i delete pods -n ${NAMESPACE} = no`);
+      expect(actual[`can-i create pods --subresource=exec -n ${NAMESPACE}`]).to.equal(
+        `can-i create pods --subresource=exec -n ${NAMESPACE} = yes`,
+      );
+    });
+  });
+
+  describe(`as group ${NS_VIEWER} in namespace ${NAMESPACE}`, () => {
+    const actual = canI(catalog, NS_VIEWER, NAMESPACE);
+
+    describe('Then', () => {
+      expect(actual[`can-i get pods -n ${NAMESPACE}`]).to.equal(`can-i get pods -n ${NAMESPACE} = yes`);
+      expect(actual[`can-i create pods -n ${NAMESPACE}`]).to.equal(`can-i create pods -n ${NAMESPACE} = no`);
+      expect(actual[`can-i create pods --subresource=exec -n ${NAMESPACE}`]).to.equal(
+        `can-i create pods --subresource=exec -n ${NAMESPACE} = no`,
+      );
     });
   });
 }
@@ -82,12 +97,11 @@ function discover() {
 }
 
 function canI(catalog, asGroup, namespace) {
-  const actual = {};
+  const actual = { 'can-i': '' };
+  console.log(`as group ${asGroup} -n ${namespace}`);
 
   function check(item) {
-    const group = item.group || 'core';
-    const name = item.subresource ? `${item.resource}/${item.subresource}` : item.resource;
-    const resource = group === 'core' ? name : `${name}.${group}`;
+    const type = item.group ? `${item.resource}.${item.group}` : item.resource;
 
     for (const verb of item.verbs) {
       const review = {
@@ -115,15 +129,18 @@ function canI(catalog, asGroup, namespace) {
         },
       );
       if (res.status !== 200 && res.status !== 201) {
-        throw new Error(`POST subjectaccessreviews ${verb} ${name} -> ${res.status}`);
+        throw new Error(`POST subjectaccessreviews ${verb} ${type} -> ${res.status}`);
       }
 
       const status = res.json().status;
       const allowed = status && status.allowed ? 'yes' : 'no';
-      const question = `can-i ${verb} ${resource}`;
+      let question = `can-i ${verb} ${type}`;
+      if (item.subresource) question += ` --subresource=${item.subresource}`;
+      if (item.namespaced) question += ` -n ${namespace}`;
       const line = `${question} = ${allowed}`;
       actual[question] = line;
-      console.log(line);
+      actual['can-i'] += `${line}\n`;
+      console.log(`${question} --as=${USER} --as-group=${asGroup} = ${allowed}`);
     }
   }
 
