@@ -1,0 +1,84 @@
+# Test-only copies. Namespace is not created; ns roles use ClusterRoleBinding
+# so can-i against rbac-test works without a Namespace object.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: t-rbac-kac-ns-viewer
+  labels:
+    app.kubernetes.io/part-of: kac-rbac-test
+rules:
+  - apiGroups: ["", "apps"]
+    resources: ["pods", "services", "deployments", "replicasets", "configmaps"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: t-rbac-kac-ns-admin
+  labels:
+    app.kubernetes.io/part-of: kac-rbac-test
+rules:
+  - apiGroups: ["", "apps"]
+    resources: ["*"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+  - apiGroups: ["batch"]
+    resources: ["jobs", "cronjobs"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: t-rbac-kac-cluster-admin
+  labels:
+    app.kubernetes.io/part-of: kac-rbac-test
+rules:
+  - apiGroups: ["*"]
+    resources: ["*"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+  - nonResourceURLs: ["*"]
+    verbs: ["get", "post"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: t-rbac-kac-cluster-admin
+  labels:
+    app.kubernetes.io/part-of: kac-rbac-test
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: t-rbac-kac-cluster-admin
+subjects:
+  - kind: Group
+    name: t-rbac-kac-cluster-admin
+    apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: t-rbac-kac-ns-admin
+  labels:
+    app.kubernetes.io/part-of: kac-rbac-test
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: t-rbac-kac-ns-admin
+subjects:
+  - kind: Group
+    name: t-rbac-kac-ns-admin
+    apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: t-rbac-kac-ns-viewer
+  labels:
+    app.kubernetes.io/part-of: kac-rbac-test
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: t-rbac-kac-ns-viewer
+subjects:
+  - kind: Group
+    name: t-rbac-kac-ns-viewer
+    apiGroup: rbac.authorization.k8s.io

@@ -1,0 +1,10 @@
+apiVersion: authorization.k8s.io/v1
+kind: SubjectAccessReview
+spec:
+  user: kac-can-i
+  groups: []
+  resourceAttributes:
+    verb: ""
+    resource: ""
+    group: ""
+    namespace: ""
