@@ -11,40 +11,33 @@ let k8s;
 
 export default function () {
   describe(CLUSTER_ADMIN, () => {
-    expectCanI(CLUSTER_ADMIN, { verb: '*', resource: '*' }).to.equal('yes');
+    expectCanI(CLUSTER_ADMIN, { verb: '*', resource: '*' }, 'yes');
   });
 
   describe(NS_ADMIN, () => {
-    expectCanI(NS_ADMIN, { verb: 'create', resource: 'pods', subresource: 'exec' }).to.equal('no');
-    expectCanI(NS_ADMIN, { verb: 'create', resource: 'pods', subresource: 'portforward' }).to.equal('no');
-    expectCanI(NS_ADMIN, { verb: 'get', resource: 'secrets' }).to.equal('yes');
+    expectCanI(NS_ADMIN, { verb: 'create', resource: 'pods', subresource: 'exec' }, 'no');
+    expectCanI(NS_ADMIN, { verb: 'create', resource: 'pods', subresource: 'portforward' }, 'no');
+    expectCanI(NS_ADMIN, { verb: 'get', resource: 'secrets' }, 'yes');
   });
 
   describe(NS_VIEWER, () => {
-    expectCanI(NS_VIEWER, { verb: 'get', resource: 'pods' }).to.equal('yes');
-    expectCanI(NS_VIEWER, { verb: 'create', resource: 'pods', subresource: 'exec' }).to.equal('no');
-    expectCanI(NS_VIEWER, { verb: 'create', resource: 'pods', subresource: 'portforward' }).to.equal('no');
-    expectCanI(NS_VIEWER, { verb: 'get', resource: 'secrets' }).to.equal('no');
-    expectCanI(NS_VIEWER, { verb: 'create', resource: 'pods' }).to.equal('no');
-    expectCanI(NS_VIEWER, { verb: 'delete', resource: 'pods' }).to.equal('no');
-    expectCanI(NS_VIEWER, { verb: 'deletecollection', resource: 'pods' }).to.equal('no');
-    expectCanI(NS_VIEWER, { verb: 'patch', resource: 'pods' }).to.equal('no');
-    expectCanI(NS_VIEWER, { verb: 'update', resource: 'pods' }).to.equal('no');
+    expectCanI(NS_VIEWER, { verb: 'get', resource: 'pods' }, 'yes');
+    expectCanI(NS_VIEWER, { verb: 'create', resource: 'pods', subresource: 'exec' }, 'no');
+    expectCanI(NS_VIEWER, { verb: 'create', resource: 'pods', subresource: 'portforward' }, 'no');
+    expectCanI(NS_VIEWER, { verb: 'get', resource: 'secrets' }, 'no');
+    expectCanI(NS_VIEWER, { verb: 'create', resource: 'pods' }, 'no');
+    expectCanI(NS_VIEWER, { verb: 'delete', resource: 'pods' }, 'no');
+    expectCanI(NS_VIEWER, { verb: 'deletecollection', resource: 'pods' }, 'no');
+    expectCanI(NS_VIEWER, { verb: 'patch', resource: 'pods' }, 'no');
+    expectCanI(NS_VIEWER, { verb: 'update', resource: 'pods' }, 'no');
   });
 }
 
-function expectCanI(group, attrs) {
-  const question = label(attrs);
-  return {
-    to: {
-      equal(allowed) {
-        const title = allowed === 'yes' ? `should allow ${question}` : `should deny ${question}`;
-        describe(title, () => {
-          expect(canI(group, attrs), question).to.equal(allowed);
-        });
-      },
-    },
-  };
+function expectCanI(group, attrs, allowed) {
+  const name = [attrs.verb, attrs.resource, attrs.subresource].filter(Boolean).join(' ');
+  describe(`${allowed === 'yes' ? 'should allow' : 'should deny'} ${name}`, () => {
+    expect(canI(group, attrs), name).to.equal(allowed);
+  });
 }
 
 function canI(group, attrs) {
@@ -59,16 +52,9 @@ function canI(group, attrs) {
         resource: attrs.resource,
         subresource: attrs.subresource,
         verb: attrs.verb,
-        namespace: 'payments',
+        // namespace: 'payments',
       },
     },
   });
   return sar.status && sar.status.allowed ? 'yes' : 'no';
-}
-
-function label(attrs) {
-  const type = attrs.group ? `${attrs.resource}.${attrs.group}` : attrs.resource;
-  let q = `${attrs.verb} ${type}`;
-  if (attrs.subresource) q += ` --subresource=${attrs.subresource}`;
-  return q;
 }
